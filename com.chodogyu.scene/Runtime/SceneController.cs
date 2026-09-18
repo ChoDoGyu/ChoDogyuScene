@@ -1,4 +1,5 @@
 ﻿using System;
+using CDG.Core.Results;
 
 namespace CDG.Scene
 {
@@ -64,6 +65,33 @@ namespace CDG.Scene
         }
 
         /// <summary>
+        /// 지정된 Scene을 비동기로 로드합니다.
+        /// v1.0의 현재 구현에서는 Single 모드의 로드를 지원합니다.
+        /// </summary>
+        public Result<SceneOperation> LoadAsync(SceneReference scene, SceneLoadMode mode = SceneLoadMode.Single)
+        {
+            Result validationResult = ValidateLoadRequest(scene, mode);
+
+            if (validationResult.IsFailure)
+            {
+                return Result<SceneOperation>.Failure(validationResult.Error);
+            }
+
+            ISceneAsyncOperation asyncOperation = runtime.LoadSingleAsync(scene);
+
+            if (asyncOperation == null)
+            {
+                return Result<SceneOperation>.Failure(new ResultError(SceneErrorCodes.LoadStartFailed, "Failed to start the scene load operation."));
+            }
+
+            SceneOperation operation = new SceneOperation(scene, SceneOperationKind.SingleLoad, asyncOperation);
+
+            TrackOperation(operation);
+
+            return Result<SceneOperation>.Success(operation);
+        }
+
+        /// <summary>
         /// 지정된 Scene 작업을 현재 작업으로 등록하고 완료 상태를 추적합니다.
         /// </summary>
         /// <exception cref="ArgumentNullException">
@@ -85,6 +113,31 @@ namespace CDG.Scene
             {
                 OnOperationCompleted();
             }
+        }
+
+        private Result ValidateLoadRequest(SceneReference scene, SceneLoadMode mode)
+        {
+            if (scene.IsEmpty)
+            {
+                return Result.Failure(new ResultError(SceneErrorCodes.InvalidReference, "Scene reference is empty."));
+            }
+
+            if (mode != SceneLoadMode.Single)
+            {
+                return Result.Failure(new ResultError(SceneErrorCodes.InvalidLoadMode, "The specified scene load mode is not supported."));
+            }
+
+            if (!runtime.IsSceneInBuild(scene))
+            {
+                return Result.Failure(new ResultError(SceneErrorCodes.NotInBuild, "The scene is not registered in the current build."));
+            }
+
+            if (runtime.IsSceneLoaded(scene))
+            {
+                return Result.Failure(new ResultError(SceneErrorCodes.AlreadyLoaded, "The scene is already loaded."));
+            }
+
+            return Result.Success();
         }
 
         private void OnOperationCompleted()

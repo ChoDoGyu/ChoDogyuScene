@@ -125,18 +125,202 @@ namespace CDG.Scene.Tests.Runtime
             Assert.That(controller.CurrentOperation, Is.Null);
         }
 
+        [Test]
+        public void LoadAsync_WithEmptyScene_ReturnsInvalidReference()
+        {
+            FakeSceneRuntime runtime = new FakeSceneRuntime
+            {
+                IsInBuild = true
+            };
+
+            SceneController controller = new SceneController(runtime);
+
+            var result = controller.LoadAsync(default);
+
+            Assert.That(result.IsFailure, Is.True);
+            Assert.That(result.Error.Code, Is.EqualTo(SceneErrorCodes.InvalidReference));
+            Assert.That(runtime.LoadSingleCallCount, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void LoadAsync_WithAdditiveMode_ReturnsInvalidLoadMode()
+        {
+            FakeSceneRuntime runtime = new FakeSceneRuntime
+            {
+                IsInBuild = true
+            };
+
+            SceneController controller = new SceneController(runtime);
+            SceneReference scene = new SceneReference("Assets/Scenes/Gameplay.unity");
+
+            var result = controller.LoadAsync(scene, SceneLoadMode.Additive);
+
+            Assert.That(result.IsFailure, Is.True);
+            Assert.That(result.Error.Code, Is.EqualTo(SceneErrorCodes.InvalidLoadMode));
+            Assert.That(runtime.LoadSingleCallCount, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void LoadAsync_WithSceneNotInBuild_ReturnsNotInBuild()
+        {
+            FakeSceneRuntime runtime = new FakeSceneRuntime
+            {
+                IsInBuild = false
+            };
+
+            SceneController controller = new SceneController(runtime);
+            SceneReference scene = new SceneReference("Assets/Scenes/Gameplay.unity");
+
+            var result = controller.LoadAsync(scene);
+
+            Assert.That(result.IsFailure, Is.True);
+            Assert.That(result.Error.Code, Is.EqualTo(SceneErrorCodes.NotInBuild));
+            Assert.That(runtime.LoadSingleCallCount, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void LoadAsync_WithAlreadyLoadedScene_ReturnsAlreadyLoaded()
+        {
+            FakeSceneRuntime runtime = new FakeSceneRuntime
+            {
+                IsInBuild = true,
+                IsLoaded = true
+            };
+
+            SceneController controller = new SceneController(runtime);
+            SceneReference scene = new SceneReference("Assets/Scenes/Gameplay.unity");
+
+            var result = controller.LoadAsync(scene);
+
+            Assert.That(result.IsFailure, Is.True);
+            Assert.That(result.Error.Code, Is.EqualTo(SceneErrorCodes.AlreadyLoaded));
+            Assert.That(runtime.LoadSingleCallCount, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void LoadAsync_WhenRuntimeFailsToStart_ReturnsLoadStartFailed()
+        {
+            FakeSceneRuntime runtime = new FakeSceneRuntime
+            {
+                IsInBuild = true,
+                IsLoaded = false,
+                LoadSingleOperation = null
+            };
+
+            SceneController controller = new SceneController(runtime);
+            SceneReference scene = new SceneReference("Assets/Scenes/Gameplay.unity");
+
+            var result = controller.LoadAsync(scene);
+
+            Assert.That(result.IsFailure, Is.True);
+            Assert.That(result.Error.Code, Is.EqualTo(SceneErrorCodes.LoadStartFailed));
+            Assert.That(runtime.LoadSingleCallCount, Is.EqualTo(1));
+            Assert.That(controller.IsBusy, Is.False);
+        }
+
+        [Test]
+        public void LoadAsync_WithValidScene_StartsSingleLoadAndReturnsOperation()
+        {
+            FakeSceneAsyncOperation asyncOperation = new FakeSceneAsyncOperation();
+
+            FakeSceneRuntime runtime = new FakeSceneRuntime
+            {
+                IsInBuild = true,
+                IsLoaded = false,
+                LoadSingleOperation = asyncOperation
+            };
+
+            SceneController controller = new SceneController(runtime);
+            SceneReference scene = new SceneReference("Assets/Scenes/Gameplay.unity");
+
+            var result = controller.LoadAsync(scene);
+
+            Assert.That(result.IsSuccess, Is.True);
+            Assert.That(runtime.LoadSingleCallCount, Is.EqualTo(1));
+            Assert.That(runtime.LastSingleLoadScene, Is.EqualTo(scene));
+
+            SceneOperation operation = result.Value;
+
+            Assert.That(operation.Scene, Is.EqualTo(scene));
+            Assert.That(operation.Kind, Is.EqualTo(SceneOperationKind.SingleLoad));
+            Assert.That(controller.IsBusy, Is.True);
+            Assert.That(controller.CurrentOperation, Is.SameAs(operation));
+            Assert.That(controller.TargetScene, Is.EqualTo(scene));
+        }
+
+        [Test]
+        public void LoadAsync_WithValidScene_RaisesOperationStarted()
+        {
+            FakeSceneRuntime runtime = new FakeSceneRuntime
+            {
+                IsInBuild = true,
+                LoadSingleOperation = new FakeSceneAsyncOperation()
+            };
+
+            SceneController controller = new SceneController(runtime);
+            SceneReference scene = new SceneReference("Assets/Scenes/Gameplay.unity");
+
+            SceneOperation startedOperation = null;
+            controller.OperationStarted += operation => startedOperation = operation;
+
+            var result = controller.LoadAsync(scene);
+
+            Assert.That(result.IsSuccess, Is.True);
+            Assert.That(startedOperation, Is.SameAs(result.Value));
+        }
+
+        [Test]
+        public void LoadAsync_WhenOperationCompletes_ClearsControllerState()
+        {
+            FakeSceneAsyncOperation asyncOperation = new FakeSceneAsyncOperation();
+
+            FakeSceneRuntime runtime = new FakeSceneRuntime
+            {
+                IsInBuild = true,
+                LoadSingleOperation = asyncOperation
+            };
+
+            SceneController controller = new SceneController(runtime);
+            SceneReference scene = new SceneReference("Assets/Scenes/Gameplay.unity");
+
+            SceneOperation completedOperation = null;
+            controller.OperationCompleted += operation => completedOperation = operation;
+
+            var result = controller.LoadAsync(scene);
+
+            Assert.That(result.IsSuccess, Is.True);
+            Assert.That(controller.IsBusy, Is.True);
+
+            asyncOperation.Complete();
+
+            Assert.That(controller.IsBusy, Is.False);
+            Assert.That(controller.CurrentOperation, Is.Null);
+            Assert.That(controller.TargetScene, Is.EqualTo(default(SceneReference)));
+            Assert.That(completedOperation, Is.SameAs(result.Value));
+        }
+
         private sealed class FakeSceneRuntime : ISceneRuntime
         {
             public SceneReference ActiveScene { get; set; }
 
+            public bool IsInBuild { get; set; }
+
+            public bool IsLoaded { get; set; }
+
+            public ISceneAsyncOperation LoadSingleOperation { get; set; }
+
+            public SceneReference LastSingleLoadScene { get; private set; }
+
+            public int LoadSingleCallCount { get; private set; }
+
             public bool IsSceneInBuild(SceneReference scene)
             {
-                return false;
+                return IsInBuild;
             }
 
             public bool IsSceneLoaded(SceneReference scene)
             {
-                return false;
+                return IsLoaded;
             }
 
             public SceneReference GetActiveScene()
@@ -146,7 +330,10 @@ namespace CDG.Scene.Tests.Runtime
 
             public ISceneAsyncOperation LoadSingleAsync(SceneReference scene)
             {
-                return null;
+                LoadSingleCallCount++;
+                LastSingleLoadScene = scene;
+
+                return LoadSingleOperation;
             }
 
             public ISceneAsyncOperation LoadAdditiveAsync(SceneReference scene)
