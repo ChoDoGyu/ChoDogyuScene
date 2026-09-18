@@ -299,6 +299,97 @@ namespace CDG.Scene.Tests.Runtime
             Assert.That(completedOperation, Is.SameAs(result.Value));
         }
 
+        [Test]
+        public void LoadAsync_WithSameRequestInProgress_ReturnsExistingOperationWithoutStartingAnotherLoad()
+        {
+            FakeSceneRuntime runtime = new FakeSceneRuntime
+            {
+                IsInBuild = true,
+                LoadSingleOperation = new FakeSceneAsyncOperation()
+            };
+
+            SceneController controller = new SceneController(runtime);
+            SceneReference scene = new SceneReference("Assets/Scenes/Gameplay.unity");
+
+            int startedCount = 0;
+            controller.OperationStarted += operation => startedCount++;
+
+            var firstResult = controller.LoadAsync(scene);
+            var secondResult = controller.LoadAsync(scene);
+
+            Assert.That(firstResult.IsSuccess, Is.True);
+            Assert.That(secondResult.IsSuccess, Is.True);
+            Assert.That(secondResult.Value, Is.SameAs(firstResult.Value));
+            Assert.That(controller.CurrentOperation, Is.SameAs(firstResult.Value));
+            Assert.That(runtime.LoadSingleCallCount, Is.EqualTo(1));
+            Assert.That(startedCount, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void LoadAsync_WithDifferentSceneWhileOperationInProgress_ReturnsOperationInProgress()
+        {
+            FakeSceneRuntime runtime = new FakeSceneRuntime
+            {
+                IsInBuild = true,
+                LoadSingleOperation = new FakeSceneAsyncOperation()
+            };
+
+            SceneController controller = new SceneController(runtime);
+            SceneReference firstScene = new SceneReference("Assets/Scenes/Gameplay.unity");
+            SceneReference secondScene = new SceneReference("Assets/Scenes/MainMenu.unity");
+
+            var firstResult = controller.LoadAsync(firstScene);
+            var secondResult = controller.LoadAsync(secondScene);
+
+            Assert.That(firstResult.IsSuccess, Is.True);
+            Assert.That(secondResult.IsFailure, Is.True);
+            Assert.That(secondResult.Error.Code, Is.EqualTo(SceneErrorCodes.OperationInProgress));
+            Assert.That(controller.CurrentOperation, Is.SameAs(firstResult.Value));
+            Assert.That(runtime.LoadSingleCallCount, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void LoadAsync_WithEmptySceneWhileOperationInProgress_ReturnsInvalidReference()
+        {
+            FakeSceneRuntime runtime = new FakeSceneRuntime
+            {
+                IsInBuild = true,
+                LoadSingleOperation = new FakeSceneAsyncOperation()
+            };
+
+            SceneController controller = new SceneController(runtime);
+            SceneReference scene = new SceneReference("Assets/Scenes/Gameplay.unity");
+
+            var firstResult = controller.LoadAsync(scene);
+            var secondResult = controller.LoadAsync(default);
+
+            Assert.That(firstResult.IsSuccess, Is.True);
+            Assert.That(secondResult.IsFailure, Is.True);
+            Assert.That(secondResult.Error.Code, Is.EqualTo(SceneErrorCodes.InvalidReference));
+            Assert.That(runtime.LoadSingleCallCount, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void LoadAsync_WithUnsupportedModeWhileOperationInProgress_ReturnsInvalidLoadMode()
+        {
+            FakeSceneRuntime runtime = new FakeSceneRuntime
+            {
+                IsInBuild = true,
+                LoadSingleOperation = new FakeSceneAsyncOperation()
+            };
+
+            SceneController controller = new SceneController(runtime);
+            SceneReference scene = new SceneReference("Assets/Scenes/Gameplay.unity");
+
+            var firstResult = controller.LoadAsync(scene);
+            var secondResult = controller.LoadAsync(scene, SceneLoadMode.Additive);
+
+            Assert.That(firstResult.IsSuccess, Is.True);
+            Assert.That(secondResult.IsFailure, Is.True);
+            Assert.That(secondResult.Error.Code, Is.EqualTo(SceneErrorCodes.InvalidLoadMode));
+            Assert.That(runtime.LoadSingleCallCount, Is.EqualTo(1));
+        }
+
         private sealed class FakeSceneRuntime : ISceneRuntime
         {
             public SceneReference ActiveScene { get; set; }

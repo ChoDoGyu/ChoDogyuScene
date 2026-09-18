@@ -66,15 +66,33 @@ namespace CDG.Scene
 
         /// <summary>
         /// 지정된 Scene을 비동기로 로드합니다.
-        /// v1.0의 현재 구현에서는 Single 모드의 로드를 지원합니다.
+        /// 동일한 Scene의 동일한 Load 요청이 이미 진행 중이면 기존 작업을 반환합니다.
+        /// 다른 Scene 작업이 진행 중인 경우 새로운 작업을 시작하지 않습니다.
         /// </summary>
         public Result<SceneOperation> LoadAsync(SceneReference scene, SceneLoadMode mode = SceneLoadMode.Single)
         {
-            Result validationResult = ValidateLoadRequest(scene, mode);
+            Result inputValidationResult = ValidateLoadInput(scene, mode);
 
-            if (validationResult.IsFailure)
+            if (inputValidationResult.IsFailure)
             {
-                return Result<SceneOperation>.Failure(validationResult.Error);
+                return Result<SceneOperation>.Failure(inputValidationResult.Error);
+            }
+
+            if (currentOperation != null)
+            {
+                if (currentOperation.Kind == SceneOperationKind.SingleLoad && currentOperation.Scene == scene)
+                {
+                    return Result<SceneOperation>.Success(currentOperation);
+                }
+
+                return Result<SceneOperation>.Failure(new ResultError(SceneErrorCodes.OperationInProgress, "Another scene operation is already in progress."));
+            }
+
+            Result availabilityValidationResult = ValidateLoadAvailability(scene);
+
+            if (availabilityValidationResult.IsFailure)
+            {
+                return Result<SceneOperation>.Failure(availabilityValidationResult.Error);
             }
 
             ISceneAsyncOperation asyncOperation = runtime.LoadSingleAsync(scene);
@@ -115,7 +133,7 @@ namespace CDG.Scene
             }
         }
 
-        private Result ValidateLoadRequest(SceneReference scene, SceneLoadMode mode)
+        private Result ValidateLoadInput(SceneReference scene, SceneLoadMode mode)
         {
             if (scene.IsEmpty)
             {
@@ -127,6 +145,11 @@ namespace CDG.Scene
                 return Result.Failure(new ResultError(SceneErrorCodes.InvalidLoadMode, "The specified scene load mode is not supported."));
             }
 
+            return Result.Success();
+        }
+
+        private Result ValidateLoadAvailability(SceneReference scene)
+        {
             if (!runtime.IsSceneInBuild(scene))
             {
                 return Result.Failure(new ResultError(SceneErrorCodes.NotInBuild, "The scene is not registered in the current build."));
