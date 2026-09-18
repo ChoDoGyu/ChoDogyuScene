@@ -112,6 +112,51 @@ namespace CDG.Scene
         }
 
         /// <summary>
+        /// 지정된 Scene을 비동기로 언로드합니다.
+        /// 동일한 Scene의 Unload가 이미 진행 중이면 기존 작업을 반환하며, Active Scene은 직접 언로드할 수 없습니다.
+        /// </summary>
+        public Result<SceneOperation> UnloadAsync(SceneReference scene)
+        {
+            if (scene.IsEmpty)
+            {
+                return Result<SceneOperation>.Failure(new ResultError(SceneErrorCodes.InvalidReference, "Scene reference is empty."));
+            }
+
+            if (currentOperation != null)
+            {
+                if (currentOperation.Kind == SceneOperationKind.Unload && currentOperation.Scene == scene)
+                {
+                    return Result<SceneOperation>.Success(currentOperation);
+                }
+
+                return Result<SceneOperation>.Failure(new ResultError(SceneErrorCodes.OperationInProgress, "Another scene operation is already in progress."));
+            }
+
+            if (!runtime.IsSceneLoaded(scene))
+            {
+                return Result<SceneOperation>.Failure(new ResultError(SceneErrorCodes.NotLoaded, "The scene is not currently loaded."));
+            }
+
+            if (runtime.GetActiveScene() == scene)
+            {
+                return Result<SceneOperation>.Failure(new ResultError(SceneErrorCodes.CannotUnloadActive, "The active scene cannot be unloaded directly."));
+            }
+
+            ISceneAsyncOperation asyncOperation = runtime.UnloadAsync(scene);
+
+            if (asyncOperation == null)
+            {
+                return Result<SceneOperation>.Failure(new ResultError(SceneErrorCodes.UnloadStartFailed, "Failed to start the scene unload operation."));
+            }
+
+            SceneOperation operation = new SceneOperation(scene, SceneOperationKind.Unload, asyncOperation);
+
+            TrackOperation(operation);
+
+            return Result<SceneOperation>.Success(operation);
+        }
+
+        /// <summary>
         /// 지정된 Scene이 현재 로드되어 있는지 여부를 반환합니다.
         /// 빈 SceneReference는 로드되지 않은 것으로 처리합니다.
         /// </summary>
