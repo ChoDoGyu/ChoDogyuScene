@@ -66,7 +66,7 @@ namespace CDG.Scene
 
         /// <summary>
         /// 지정된 Scene을 비동기로 로드합니다.
-        /// 동일한 Scene의 동일한 Load 요청이 이미 진행 중이면 기존 작업을 반환합니다.
+        /// 동일한 Scene과 Load Mode의 요청이 이미 진행 중이면 기존 작업을 반환합니다.
         /// 다른 Scene 작업이 진행 중인 경우 새로운 작업을 시작하지 않습니다.
         /// </summary>
         public Result<SceneOperation> LoadAsync(SceneReference scene, SceneLoadMode mode = SceneLoadMode.Single)
@@ -78,9 +78,11 @@ namespace CDG.Scene
                 return Result<SceneOperation>.Failure(inputValidationResult.Error);
             }
 
+            SceneOperationKind requestedKind = GetOperationKind(mode);
+
             if (currentOperation != null)
             {
-                if (currentOperation.Kind == SceneOperationKind.SingleLoad && currentOperation.Scene == scene)
+                if (currentOperation.Kind == requestedKind && currentOperation.Scene == scene)
                 {
                     return Result<SceneOperation>.Success(currentOperation);
                 }
@@ -95,14 +97,14 @@ namespace CDG.Scene
                 return Result<SceneOperation>.Failure(availabilityValidationResult.Error);
             }
 
-            ISceneAsyncOperation asyncOperation = runtime.LoadSingleAsync(scene);
+            ISceneAsyncOperation asyncOperation = StartLoadOperation(scene, mode);
 
             if (asyncOperation == null)
             {
                 return Result<SceneOperation>.Failure(new ResultError(SceneErrorCodes.LoadStartFailed, "Failed to start the scene load operation."));
             }
 
-            SceneOperation operation = new SceneOperation(scene, SceneOperationKind.SingleLoad, asyncOperation);
+            SceneOperation operation = new SceneOperation(scene, requestedKind, asyncOperation);
 
             TrackOperation(operation);
 
@@ -140,7 +142,7 @@ namespace CDG.Scene
                 return Result.Failure(new ResultError(SceneErrorCodes.InvalidReference, "Scene reference is empty."));
             }
 
-            if (mode != SceneLoadMode.Single)
+            if (mode != SceneLoadMode.Single && mode != SceneLoadMode.Additive)
             {
                 return Result.Failure(new ResultError(SceneErrorCodes.InvalidLoadMode, "The specified scene load mode is not supported."));
             }
@@ -161,6 +163,20 @@ namespace CDG.Scene
             }
 
             return Result.Success();
+        }
+
+        private SceneOperationKind GetOperationKind(SceneLoadMode mode)
+        {
+            return mode == SceneLoadMode.Single
+                ? SceneOperationKind.SingleLoad
+                : SceneOperationKind.AdditiveLoad;
+        }
+
+        private ISceneAsyncOperation StartLoadOperation(SceneReference scene, SceneLoadMode mode)
+        {
+            return mode == SceneLoadMode.Single
+                ? runtime.LoadSingleAsync(scene)
+                : runtime.LoadAdditiveAsync(scene);
         }
 
         private void OnOperationCompleted()
