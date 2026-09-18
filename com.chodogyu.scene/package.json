@@ -1,0 +1,17 @@
+﻿{
+  "name": "com.chodogyu.scene",
+  "version": "1.0.0",
+  "displayName": "ChoDogyu Scene & Loading Framework",
+  "description": "Unity 프로젝트에서 Scene 전환, 비동기 로딩, Additive Loading, Unload 및 로딩 상태 관리를 일관된 방식으로 제공하는 범용 Scene & Loading Framework입니다.",
+  "unity": "6000.3",
+  "keywords": [
+    "scene",
+    "loading",
+    "framework",
+    "async",
+    "additive"
+  ],
+  "author": {
+    "name": "ChoDogyu"
+  }
+}

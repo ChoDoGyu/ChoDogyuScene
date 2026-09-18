@@ -1,0 +1,25 @@
+﻿{
+  "name": "CDG.Scene.Tests.Editor",
+  "rootNamespace": "CDG.Scene.Tests.Editor",
+  "references": [
+    "CDG.Scene",
+    "CDG.Scene.Editor",
+    "CDG.Core"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": false,
+  "defineConstraints": [
+    "UNITY_INCLUDE_TESTS"
+  ],
+  "versionDefines": [],
+  "noEngineReferences": false,
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ]
+}
