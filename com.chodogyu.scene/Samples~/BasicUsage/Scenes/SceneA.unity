@@ -257,7 +257,7 @@ GameObject:
   - component: {fileID: 1894046621}
   - component: {fileID: 1894046622}
   m_Layer: 0
-  m_Name: SceneA_Root
+  m_Name: SceneFrameworkSample
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -290,12 +290,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 16312e3f43e93d84e9dea963eed2c452, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CDG.Scene.Validation.BasicSceneUsage
-  sceneA:
-    path: Assets/SceneFrameworkValidation/Scenes/SceneA.unity
-  sceneB:
-    path: Assets/SceneFrameworkValidation/Scenes/SceneB.unity
-  additiveScene:
-    path: Assets/SceneFrameworkValidation/Scenes/AdditiveScene.unity
 --- !u!1 &2141751755
 GameObject:
   m_ObjectHideFlags: 0

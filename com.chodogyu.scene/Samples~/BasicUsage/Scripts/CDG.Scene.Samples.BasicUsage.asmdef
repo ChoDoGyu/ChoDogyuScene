@@ -1,0 +1,17 @@
+﻿{
+  "name": "CDG.Scene.Samples.BasicUsage",
+  "rootNamespace": "CDG.Scene.Samples.BasicUsage",
+  "references": [
+    "CDG.Scene",
+    "CDG.Core"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}
