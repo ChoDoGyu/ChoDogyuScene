@@ -208,11 +208,11 @@ namespace CDG.Scene
             }
 
             currentOperation = operation;
-            currentOperation.Completed += OnOperationCompleted;
+            operation.Completed += OnOperationCompleted;
 
-            OperationStarted?.Invoke(currentOperation);
+            OperationStarted?.Invoke(operation);
 
-            if (currentOperation.IsDone)
+            if (ReferenceEquals(currentOperation, operation) && operation.IsDone)
             {
                 OnOperationCompleted();
             }
