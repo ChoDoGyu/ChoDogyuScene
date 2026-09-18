@@ -112,6 +112,44 @@ namespace CDG.Scene
         }
 
         /// <summary>
+        /// 지정된 Scene이 현재 로드되어 있는지 여부를 반환합니다.
+        /// 빈 SceneReference는 로드되지 않은 것으로 처리합니다.
+        /// </summary>
+        public bool IsSceneLoaded(SceneReference scene)
+        {
+            if (scene.IsEmpty)
+            {
+                return false;
+            }
+
+            return runtime.IsSceneLoaded(scene);
+        }
+
+        /// <summary>
+        /// 이미 로드된 지정 Scene을 Active Scene으로 변경합니다.
+        /// Scene이 비어 있거나 로드되지 않은 경우 또는 Runtime 변경에 실패한 경우 실패 결과를 반환합니다.
+        /// </summary>
+        public Result SetActiveScene(SceneReference scene)
+        {
+            if (scene.IsEmpty)
+            {
+                return Result.Failure(new ResultError(SceneErrorCodes.InvalidReference, "Scene reference is empty."));
+            }
+
+            if (!runtime.IsSceneLoaded(scene))
+            {
+                return Result.Failure(new ResultError(SceneErrorCodes.NotLoaded, "The scene is not currently loaded."));
+            }
+
+            if (!runtime.SetActiveScene(scene))
+            {
+                return Result.Failure(new ResultError(SceneErrorCodes.SetActiveFailed, "Failed to set the active scene."));
+            }
+
+            return Result.Success();
+        }
+
+        /// <summary>
         /// 지정된 Scene 작업을 현재 작업으로 등록하고 완료 상태를 추적합니다.
         /// </summary>
         /// <exception cref="ArgumentNullException">
