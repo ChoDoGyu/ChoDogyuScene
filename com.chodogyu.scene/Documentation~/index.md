@@ -79,6 +79,10 @@ Result<T>
 ResultError
 ```
 
+Scene Framework의 `package.json`은 ChoDogyu Core의 Git URL을 직접 의존성으로 선언하지 않습니다.
+
+따라서 Git UPM으로 사용할 때는 Core를 먼저 설치해야 합니다.
+
 다음 CDG 패키지는 필수 의존성이 아닙니다.
 
 ```text
@@ -96,16 +100,12 @@ Scene Framework 자체는 UI, Audio, Save 등의 다른 시스템을 직접 제�
 
 # 3. Installation
 
-먼저 ChoDogyu Core를 설치합니다.
+## 3.1 ChoDogyu Core v1.0.0 설치
+
+Unity Package Manager에서 다음 Git URL을 사용합니다.
 
 ```text
 https://github.com/ChoDoGyu/ChoDogyuCore.git?path=/com.chodogyu.core#v1.0.0
-```
-
-그다음 Scene Framework를 설치합니다.
-
-```text
-https://github.com/ChoDoGyu/ChoDogyuScene.git?path=/com.chodogyu.scene
 ```
 
 Unity에서:
@@ -118,15 +118,30 @@ Window
 → Install package from git URL...
 ```
 
-v1.0.0 Release Tag가 생성된 이후에는 다음 형태로 버전을 고정할 수 있습니다.
+Core 설치가 완료되고 Console Error가 없는 것을 확인합니다.
+
+---
+
+## 3.2 ChoDogyu Scene & Loading Framework v1.0.0 설치
+
+Core 설치 후 다음 Git URL을 사용합니다.
 
 ```text
 https://github.com/ChoDoGyu/ChoDogyuScene.git?path=/com.chodogyu.scene#v1.0.0
 ```
 
+설치 후 Package Manager에서 다음 정보가 표시되는지 확인합니다.
+
+```text
+ChoDogyu Scene & Loading Framework
+1.0.0
+```
+
 ---
 
 # 4. Package Structure
+
+패키지의 기본 구조는 다음과 같습니다.
 
 ```text
 com.chodogyu.scene/
@@ -1155,9 +1170,9 @@ Framework는 새로운 Unity 프로젝트에서 독립 UPM 패키지로 사용�
 기본 설치 관계:
 
 ```text
-ChoDogyu Core
+ChoDogyu Core v1.0.0
 ↓
-ChoDogyu Scene & Loading Framework
+ChoDogyu Scene & Loading Framework v1.0.0
 ```
 
 다른 CDG 패키지를 설치하지 않아도 Scene Framework 자체 기능을 사용할 수 있습니다.
@@ -1204,7 +1219,7 @@ Network Scene Synchronization
 
 # 56. Design Summary
 
-Scene Framework v1의 핵심 구조:
+Scene Framework v1.0.0의 핵심 구조:
 
 ```text
 SceneReference

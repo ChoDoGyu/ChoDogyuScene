@@ -529,14 +529,6 @@ https://github.com/ChoDoGyu/ChoDogyuCore.git?path=/com.chodogyu.core#v1.0.0
 
 ### 2. ChoDogyu Scene & Loading Framework
 
-현재 개발 버전:
-
-```text
-https://github.com/ChoDoGyu/ChoDogyuScene.git?path=/com.chodogyu.scene
-```
-
-v1.0.0 Release Tag 생성 이후:
-
 ```text
 https://github.com/ChoDoGyu/ChoDogyuScene.git?path=/com.chodogyu.scene#v1.0.0
 ```
@@ -828,7 +820,7 @@ Build 등록 여부
 새로운 Unity 6.3 프로젝트에서 실제 Git UPM 설치 및 사용 흐름을 검증했습니다.
 
 ```text
-ChoDogyu Core 설치
+ChoDogyu Core v1.0.0 설치
 → 성공
 
 ChoDogyu Scene & Loading Framework 설치
@@ -917,25 +909,25 @@ Unity Scene API 구현 세부 사항 분리
 패키지 기본 사용법:
 
 ```text
-com.chodogyu.scene/README.md
+ChoDogyuScene/com.chodogyu.scene/README.md
 ```
 
 상세 설계 및 사용 규칙:
 
 ```text
-com.chodogyu.scene/Documentation~/index.md
+ChoDogyuScene/com.chodogyu.scene/Documentation~/index.md
 ```
 
 버전 변경 사항:
 
 ```text
-com.chodogyu.scene/CHANGELOG.md
+ChoDogyuScene/com.chodogyu.scene/CHANGELOG.md
 ```
 
 Basic Usage Sample 안내:
 
 ```text
-com.chodogyu.scene/Samples~/BasicUsage/README.md
+ChoDogyuScene/com.chodogyu.scene/Samples~/BasicUsage/README.md
 ```
 
 ---

@@ -2,7 +2,7 @@
 
 이 문서는 ChoDogyu Scene & Loading Framework의 주요 변경 사항을 기록합니다.
 
-## [1.0.0] - In Development
+## [1.0.0] - 2026-09-19
 
 ### Added
 

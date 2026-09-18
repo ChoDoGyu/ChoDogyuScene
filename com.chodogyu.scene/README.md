@@ -34,11 +34,19 @@ Unity의 `SceneManager`와 `AsyncOperation`을 직접 사용하는 대신, Scene
 
 먼저 ChoDogyu Core 패키지가 설치되어 있어야 합니다.
 
-Unity Package Manager의 **Add package from git URL...**을 사용하여 Scene Framework를 설치할 수 있습니다.
+### ChoDogyu Core v1.0.0
 
 ```text
-https://github.com/ChoDoGyu/ChoDogyuScene.git?path=/com.chodogyu.scene
+https://github.com/ChoDoGyu/ChoDogyuCore.git?path=/com.chodogyu.core#v1.0.0
 ```
+
+### ChoDogyu Scene & Loading Framework v1.0.0
+
+```text
+https://github.com/ChoDoGyu/ChoDogyuScene.git?path=/com.chodogyu.scene#v1.0.0
+```
+
+Unity Package Manager의 **Install package from git URL...**을 사용하여 설치합니다.
 
 ## 기본 사용 흐름
 
@@ -95,6 +103,8 @@ var result = sceneController.LoadAsync(
 ```
 
 오픈 월드의 구역 분할, 게임 플레이 Scene과 UI Scene 분리 등 여러 Scene을 동시에 유지해야 하는 구조에서 사용할 수 있습니다.
+
+Framework 자체가 위치 기반 Streaming이나 Chunk 자동 로딩 정책을 제공하는 것은 아닙니다.
 
 ## Scene Unload
 
